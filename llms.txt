@@ -1,0 +1,24 @@
+# dsh-agent-plugin-bridge
+
+> Generic Agent Plugins 1.0 → DeepSeek Harness bridge. Discovers `plugin.json` packages, registers `skills/` into the host `skills` service, registers `mcp.json` (per-plugin or standalone `~/.cursor/mcp.json`) into the host MCP client.
+
+## Key facts
+
+- Runtime guard: `assertPeerCompatible()` rejects silently-linked older `@deepseek-ai/dsh-tools` copies
+- Verification: unit tests; packaged integration (pack → fresh host → real `apply()` → real `bridge_summary` handler → assert); CI boot smoke on Windows
+- Includes `cordis.patch.yml`, `dsh.bundle`, `files` allowlist, `prepare` script
+- Forked from [zoahdev/dsh-plugin-template](https://github.com/zoahdev/dsh-plugin-template)
+
+## Key files
+
+- src/index.ts — plugin entry, peer guard, `bridge_summary` tool
+- src/version.ts — peer-version guard
+- src/discover.ts — plugin.json + skills/ + mcp.json discovery
+- src/skills.ts — SKILL.md registration into host skills service
+- src/mcp.ts — Agent Plugin MCP + standalone mcp.json registration
+- scripts/integration-test.mjs — packaged real-invocation smoke
+
+## Community
+
+- Template: https://github.com/zoahdev/dsh-plugin-template
+- RFC #1629: https://github.com/deepseek-ai/deepseek-harness/discussions/1629

@@ -1,0 +1,12 @@
+- insert:
+    - id: dsh-agent-plugin-bridge
+      name: dsh-agent-plugin-bridge
+      config:
+        pluginRoots: []
+        pluginsDirs:
+          - '~/.cursor/plugins/local'
+        mcpJsonPaths:
+          - '~/.cursor/mcp.json'
+        loadPluginMcp: true
+        failOnMcpError: false
+        skillProviderLabel: agent-plugin
