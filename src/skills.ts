@@ -10,7 +10,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { DiscoveredPlugin, ParsedSkill } from './types.js'
 
 /** Minimal YAML-ish frontmatter: key: value and folded `>-` / `>` blocks. */
-function parseFrontmatter(raw: string): { meta: Record<string, string>; body: string } {
+export function parseFrontmatter(raw: string): { meta: Record<string, string>; body: string } {
   const trimmed = raw.replace(/^\uFEFF/, '')
   if (!trimmed.startsWith('---')) {
     return { meta: {}, body: trimmed }
@@ -18,7 +18,9 @@ function parseFrontmatter(raw: string): { meta: Record<string, string>; body: st
   const end = trimmed.indexOf('\n---', 3)
   if (end < 0) return { meta: {}, body: trimmed }
   const fm = trimmed.slice(3, end).replace(/^\r?\n/, '')
-  const body = trimmed.slice(end + 4).replace(/^\r?\n/, '')
+  // After the closing `---` line: skip one optional blank line, then trim any
+  // trailing newline so callers don't have to.
+  const body = trimmed.slice(end + 4).replace(/^\r?\n/, '').replace(/\r?\n$/, '')
   const meta: Record<string, string> = {}
   const lines = fm.split(/\r?\n/)
   let i = 0
@@ -108,7 +110,7 @@ export async function registerPluginSkills(
       name: skill.name,
       description: skill.description,
       content: skill.content,
-      source: 'custom',
+      source: 'agent-plugin-bridge',
       provider: `${providerLabel}:${plugin.manifest.name}`,
       path: skill.path,
       resourceBase: { kind: 'directory', path: skill.directory },

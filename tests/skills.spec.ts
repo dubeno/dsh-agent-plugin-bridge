@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { registerPluginSkills } from '../src/skills.js'
+import { parseFrontmatter, registerPluginSkills } from '../src/skills.js'
 import { discoverPlugin } from '../src/discover.js'
 
 let workDir: string
@@ -90,5 +90,54 @@ describe('registerPluginSkills', () => {
     const count = await registerPluginSkills(ctx as never, plugin!, 'agent-plugin')
     expect(count).toBe(0)
     expect(warn).toHaveBeenCalled()
+  })
+})
+
+describe('parseFrontmatter', () => {
+  it('returns empty meta and full body when no frontmatter is present', () => {
+    const { meta, body } = parseFrontmatter('just body\n')
+    expect(meta).toEqual({})
+    expect(body).toBe('just body\n')
+  })
+
+  it('parses simple key: value pairs', () => {
+    const raw = '---\nname: greet\ndescription: Greet\n---\nBody text\n'
+    const { meta, body } = parseFrontmatter(raw)
+    expect(meta).toEqual({ name: 'greet', description: 'Greet' })
+    expect(body).toBe('Body text')
+  })
+
+  it('strips matching single or double quotes from values', () => {
+    const raw = "---\nname: \"greet\"\ndescription: 'says hi'\n---\n"
+    const { meta } = parseFrontmatter(raw)
+    expect(meta.name).toBe('greet')
+    expect(meta.description).toBe('says hi')
+  })
+
+  it('joins folded `>` blocks into a single trimmed string', () => {
+    const raw = '---\ndescription: >\n  line one\n  line two\n---\nbody\n'
+    const { meta, body } = parseFrontmatter(raw)
+    expect(meta.description).toBe('line one line two')
+    expect(body).toBe('body')
+  })
+
+  it('strips a leading BOM', () => {
+    const raw = '\uFEFF---\nname: x\n---\nbody\n'
+    const { meta, body } = parseFrontmatter(raw)
+    expect(meta.name).toBe('x')
+    expect(body).toBe('body')
+  })
+
+  it('returns the raw text as body when the closing fence is missing', () => {
+    const raw = '---\nname: x\nstill part of body\n'
+    const { meta, body } = parseFrontmatter(raw)
+    expect(meta).toEqual({})
+    expect(body).toBe(raw)
+  })
+
+  it('ignores lines that do not match the key:value shape', () => {
+    const raw = '---\nname: keep\nrandom line\ndescription: yes\n---\nbody\n'
+    const { meta } = parseFrontmatter(raw)
+    expect(meta).toEqual({ name: 'keep', description: 'yes' })
   })
 })

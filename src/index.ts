@@ -80,7 +80,7 @@ export const Config: Schema<Config> = Schema.object({
   pluginRoots: Schema.array(String).default([]),
   pluginsDirs: Schema.array(String).default([]),
   mcpJsonPaths: Schema.array(String).default([]),
-  loadPluginMcp: Schema.boolean().default(true),
+  loadPluginMcp: Schema.boolean().default(false),
   failOnMcpError: Schema.boolean().default(false),
   skillProviderLabel: Schema.string().default('agent-plugin'),
 })

@@ -39,7 +39,7 @@ async function readManifest(root: string): Promise<PluginManifest | null> {
   }
   if (!parsed || typeof parsed !== 'object') return null
   const obj = parsed as Record<string, unknown>
-  if (!obj.name || typeof obj.name !== 'string') return null
+  if (typeof obj.name !== 'string' || obj.name.trim().length === 0) return null
   // The $schema field is informational; we do not gate on it strictly because
   // many Cursor-era packages ship without the agent-plugins.org schema URL.
   if (obj.$schema && !String(obj.$schema).startsWith(PLUGIN_SCHEMA_PREFIX)) {

@@ -5,7 +5,7 @@
  */
 
 import { mkdir, readFile } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
+import { basename, dirname, extname, join, resolve } from 'node:path'
 import { homedir } from 'node:os'
 import type { Context } from '@deepseek-ai/cordis'
 import * as mcpClient from '@deepseek-ai/dsh-mcp-client'
@@ -82,6 +82,8 @@ async function registerMcpFile(
     root: string
     mcpPath: string
     failOnMcpError: boolean
+    /** Plugin-bundled mcp.json sets PLUGIN_ROOT; standalone files don't. */
+    injectPluginRoot: boolean
   },
 ): Promise<number> {
   let manifest: McpManifest
@@ -97,9 +99,9 @@ async function registerMcpFile(
   const servers = manifest.mcpServers ?? {}
   const dataDir = await ownerDataDir(opts.owner)
   const vars: Record<string, string> = {
-    PLUGIN_ROOT: opts.root,
     PLUGIN_DATA: dataDir,
   }
+  if (opts.injectPluginRoot) vars.PLUGIN_ROOT = opts.root
 
   let ok = 0
   for (const [key, server] of Object.entries(servers)) {
@@ -132,12 +134,14 @@ export async function registerPluginMcp(
     root: plugin.root,
     mcpPath: plugin.mcpPath,
     failOnMcpError,
+    injectPluginRoot: true,
   })
 }
 
 /**
- * Load standalone mcp.json files (e.g. Cursor user-level ~/.cursor/mcp.json).
- * Same wire format as Agent Plugins / Cursor; not tied to a plugin package.
+ * Load a standalone mcp.json (e.g. Cursor user-level ~/.cursor/mcp.json).
+ * Owner is the file's basename so two mcpJsonPaths with overlapping
+ * server keys don't collide on PLUGIN_DATA.
  */
 export async function registerStandaloneMcpJson(
   ctx: Context,
@@ -145,7 +149,12 @@ export async function registerStandaloneMcpJson(
   failOnMcpError: boolean,
 ): Promise<number> {
   const mcpPath = resolve(expandHome(mcpPathInput))
-  const root = dirname(mcpPath)
-  const owner = 'cursor-mcp'
-  return registerMcpFile(ctx, { owner, root, mcpPath, failOnMcpError })
+  const owner = basename(mcpPath, extname(mcpPath)) || 'cursor-mcp'
+  return registerMcpFile(ctx, {
+    owner,
+    root: dirname(mcpPath),
+    mcpPath,
+    failOnMcpError,
+    injectPluginRoot: false,
+  })
 }
