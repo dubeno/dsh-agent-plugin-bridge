@@ -92,7 +92,7 @@ config:
       - '~/.cursor/plugins/local'
     mcpJsonPaths:                 # extra standalone mcp.json files
       - '~/.cursor/mcp.json'
-    loadPluginMcp: true           # load each plugin's own mcp.json
+    loadPluginMcp: false          # load each plugin's own mcp.json (default off, plugin mcp.json usually needs host env vars)
     failOnMcpError: false         # keep going when an MCP server fails to start
     skillProviderLabel: agent-plugin
 ```
@@ -282,7 +282,7 @@ Agent Plugins 1.0 的包内 `mcp.json` 经常使用 `${SOME_ENV}` 占位符，�
       - '~/.cursor/plugins/local'
     mcpJsonPaths:                 # 额外的独立 mcp.json 文件
       - '~/.cursor/mcp.json'
-    loadPluginMcp: true           # 是否加载插件自己的 mcp.json
+    loadPluginMcp: false          # 是否加载插件自己的 mcp.json（默认关：插件 mcp.json 经常依赖宿主环境变量）
     failOnMcpError: false         # MCP 启动失败时是否中止整桥
     skillProviderLabel: agent-plugin
 ```

@@ -10,6 +10,7 @@ import { homedir } from 'node:os'
 import type { Context } from '@deepseek-ai/cordis'
 import * as mcpClient from '@deepseek-ai/dsh-mcp-client'
 import { expandArgs, expandPlaceholders, expandRecord } from './expand.js'
+import { expandHome } from './discover.js'
 import type { DiscoveredPlugin, McpManifest, McpServerConfig } from './types.js'
 
 function sanitizeServerName(owner: string, serverKey: string): string {
@@ -143,7 +144,7 @@ export async function registerStandaloneMcpJson(
   mcpPathInput: string,
   failOnMcpError: boolean,
 ): Promise<number> {
-  const mcpPath = resolve(mcpPathInput)
+  const mcpPath = resolve(expandHome(mcpPathInput))
   const root = dirname(mcpPath)
   const owner = 'cursor-mcp'
   return registerMcpFile(ctx, { owner, root, mcpPath, failOnMcpError })

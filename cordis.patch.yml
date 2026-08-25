@@ -7,6 +7,8 @@
           - '~/.cursor/plugins/local'
         mcpJsonPaths:
           - '~/.cursor/mcp.json'
-        loadPluginMcp: true
+        # Default off: plugin mcp.json usually relies on host env vars that
+        # are not always set; the standalone ~/.cursor/mcp.json covers them.
+        loadPluginMcp: false
         failOnMcpError: false
         skillProviderLabel: agent-plugin

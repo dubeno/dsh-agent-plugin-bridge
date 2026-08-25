@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { tmpdir, homedir } from 'node:os'
 import path from 'node:path'
-import { discoverPlugin, discoverPlugins } from '../src/discover.js'
+import { discoverPlugin, discoverPlugins, expandHome } from '../src/discover.js'
 
 let workDir: string
 
@@ -85,5 +85,23 @@ describe('discoverPlugins', () => {
   it('skips non-existent directories and non-directory entries', async () => {
     const out = await discoverPlugins([], [path.join(workDir, 'does-not-exist')])
     expect(out).toEqual([])
+  })
+})
+
+describe('expandHome', () => {
+  it('expands a lone tilde to homedir()', () => {
+    expect(expandHome('~')).toBe(homedir())
+  })
+
+  it('expands ~/path and ~\\path to homedir + the rest', () => {
+    expect(expandHome('~/.cursor/mcp.json')).toBe(path.join(homedir(), '.cursor', 'mcp.json'))
+    expect(expandHome('~\\cursor\\mcp.json')).toBe(path.join(homedir(), 'cursor', 'mcp.json'))
+  })
+
+  it('leaves absolute paths and other inputs untouched', () => {
+    expect(expandHome('')).toBe('')
+    expect(expandHome('/etc/foo')).toBe('/etc/foo')
+    expect(expandHome('relative/path')).toBe('relative/path')
+    expect(expandHome('~user/file')).toBe('~user/file')
   })
 })

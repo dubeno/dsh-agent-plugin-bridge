@@ -11,10 +11,10 @@ import type { DiscoveredPlugin, PluginManifest } from './types.js'
 
 const PLUGIN_SCHEMA_PREFIX = 'https://agent-plugins.org/schemas/'
 
-function expandHome(input: string): string {
+export function expandHome(input: string): string {
   if (!input) return input
   if (input === '~') return homedir()
-  if (input.startsWith('~/') || input.startsWith('~\\')) return homedir() + input.slice(1)
+  if (input.startsWith('~/') || input.startsWith('~\\')) return join(homedir(), input.slice(2))
   return input
 }
 

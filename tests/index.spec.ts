@@ -62,9 +62,9 @@ function resolvedConfig(overrides: Partial<Record<string, unknown>> = {}) {
 }
 
 describe('plugin registration', () => {
-  it('registers exactly one tool (bridge_summary) after the peer guard', () => {
+  it('registers exactly one tool (bridge_summary) after the peer guard', async () => {
     const { ctx, registered } = makeCtx()
-    apply(ctx, resolvedConfig() as never)
+    await apply(ctx, resolvedConfig() as never)
     expect(registered).toHaveLength(1)
     const tool = registered[0] as { name: string }
     expect(tool.name).toBe('bridge_summary')

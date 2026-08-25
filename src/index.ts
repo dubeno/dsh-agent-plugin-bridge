@@ -21,11 +21,7 @@ import { registerPluginSkills } from './skills.js'
 
 export const name = 'dsh-agent-plugin-bridge'
 
-/**
- * Inject `skills` so SKILL.md files can register before user prompts.
- * MCP registration uses `ctx.plugin(mcpClient, …)` and is independent of `tools`.
- */
-export const inject = ['skills']
+export const inject = ['skills', 'tools']
 
 /** Peer range this plugin is tested against and guards at runtime. */
 export const TESTED_PEER_RANGE = '^0.1.0-rc.6'
@@ -133,22 +129,13 @@ export async function runBridge(ctx: Context, config: Config): Promise<BridgeSum
 }
 
 /**
- * Cordis entrypoint: enforce peer compatibility, run the bridge, and register
- * a `bridge_summary` tool so the agent can introspect what was loaded.
+ * Cordis entrypoint. Awaits `runBridge` so ctx.effect / ctx.plugin calls
+ * inside it land while the cordis fiber is still active.
  */
-export function apply(ctx: Context, config: Config): void {
+export async function apply(ctx: Context, config: Config): Promise<void> {
   assertPeerCompatible()
 
-  // Closure-captured summary so the tool can read whatever the latest runBridge
-  // produced without relying on cordis typing for ctx.state.
-  const summaryRef: { current: BridgeSummary } = {
-    current: { plugins: 0, skills: 0, mcpServers: 0 },
-  }
-
-  // Fire and forget; cordis accepts a sync apply() and the loader is async.
-  void runBridge(ctx, config).then(summary => {
-    summaryRef.current = summary
-  })
+  const summary = await runBridge(ctx, config)
 
   ctx.tools.register(defineTool({
     name: 'bridge_summary',
@@ -169,7 +156,7 @@ export function apply(ctx: Context, config: Config): void {
       render: (_args, value) => [{ type: 'text', text: JSON.stringify(value, null, 2) }],
     },
     async execute(_args, _exec) {
-      return summaryRef.current
+      return summary
     },
     presentCall: () => ({
       card: 'generic',
